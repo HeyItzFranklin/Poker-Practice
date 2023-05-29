@@ -1,7 +1,5 @@
 from enum import Enum
 import random
-from operator import itemgetter, attrgetter, methodcaller
-
 
 class Suit(Enum):
     Spade = 0
@@ -14,6 +12,10 @@ class Card():
         self.name = name
         self.value = value
         self.suit = suit
+        # Add image
+        # Add x pos
+        # Add y pos
+
 
 
 class Hand():
@@ -49,7 +51,6 @@ for i in range(NUM_OF_SUITS):
         deck.append(card)
         v += 1
 
-# can check for card.suit instead to sort prob better
 spades = []
 hearts = []
 diamonds  = []
@@ -73,13 +74,70 @@ def deal_card(location, num_of_cards) -> list:
     
     return location
 
-def check_hand_strength(hero_hand, villian_hand, dealer_cards):
-    hero_hand.append(dealer_cards)
-    villian_hand.append(dealer_cards)
+def check_pairs(hero_hand):
+    # Check for pairs
+    pairs = []
+    for i in range(len(hero_hand) - 1):
+        for j in range(i + 1, len(hero_hand)):
+            if hero_hand[i].value == hero_hand[j].value:
+                if hero_hand[i] not in pairs:
+                    pairs.append(hero_hand[i])
+                if hero_hand[j] not in pairs:
+                    pairs.append(hero_hand[j])
+    
+    for pair in pairs:
+        print(pair.name)
 
-    # hero_hand = sorted(hero_hand, key=lambda card: card.value)
+    # Distungish between pairs, 2 pair, 3 pair, 4 pair
+    # Full house
+
+def check_flush(hero_hand):
+    # Check Flush
+    has_flush = False
+    hand_hearts = []
+    hand_diamonds = []
+    hand_spades = []
+    hand_clubs = []
     for card in hero_hand:
-        print(card.name, card.value)
+        if card in hearts:
+            hand_hearts.append(card)
+        elif card in diamonds:
+            hand_diamonds.append(card)
+        elif card in spades:
+            hand_spades.append(card)
+        elif card in clubs:
+            hand_clubs.append(card)
+    
+    if len(hand_hearts) >= 5 or len(hand_diamonds) >= 5 or len(hand_spades) >= 5 or len(hand_clubs) >= 5:
+        has_flush = True
+        print("flush")
+
+    # gotta check flush high   
+
+def check_straight(hero_hand):
+    pass
+    # 5 over is amount to make a straight
+    # is threre a way to calculate 5 fits into 7 3 times
+    # check from first card to 5 over
+    # check from second card to 5 over
+    # check from third carrd to 5 over
+
+            
+
+    
+
+
+def check_hand_strength(hero_hand, villian_hand, dealer_cards):
+    for card in dealer_cards:
+        hero_hand.append(card)
+
+    hero_hand = sorted(hero_hand, key=lambda card: card.value, reverse= True)
+    
+    # need to return something
+    check_pairs(hero_hand)
+    check_flush(hero_hand)
+    # check straight
+
 
 hero = Hand()
 hero.cards = deal_card(hero.cards, 2)
@@ -101,9 +159,8 @@ print()
 print("THE FLOP:")
 for card in flop:
     print(card.name, card.value, card.suit)
+print()
 
-print(type(hero.cards))
 check_hand_strength(hero.cards, villian.cards, flop)
-
 
 
