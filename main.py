@@ -80,8 +80,6 @@ def Play():
                 else:
                     pass
         
-               
-        
 
         
         pygame.display.flip()
