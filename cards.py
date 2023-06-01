@@ -11,21 +11,21 @@ class Suit(Enum):
     Diamond = 2
     Club = 3
 
+class Winner(Enum):
+    Hero = 0
+    Villian = 1
+    Tie = 2
+
 
 class Card():
-    def __init__(self, name, value, suit, image):
+    def __init__(self, name, value, suit, image, back):
         self.name = name
         self.value = value
         self.suit = suit
         self.image = image
+        self.back = back
         self.x_pos = 0
         self.y_pos = 0
-
-# class Hand():
-#     def __init__(self):
-#         self.cards = []
-#         self.hand_rating = 1
-#         self.is_winning = False
 
 
 SUIT_NAMES = ["_of_spades", "_of_hearts", "_of_diamonds", "_of_clubs"]
@@ -33,6 +33,7 @@ NUM_OF_SUITS = len(SUIT_NAMES)
 CARD_NAMES = ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king"]
 CARDS_PER_SUIT = len(CARD_NAMES)
 HAND_LENGTH = 5
+back = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card_back.png")), (120, 220))
 
 # Addes the name of the card, the v(alue) of the card and the suit of the card to the deck
 deck = []
@@ -41,8 +42,7 @@ for i in range(NUM_OF_SUITS):
     for card in CARD_NAMES:
         card += SUIT_NAMES[i]
         image = card + ".png"
-        card = Card(card, v, Suit(i), pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card-Images", image)), (100, 200)))
-       
+        card = Card(card, v, Suit(i), pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card-Images", image)), (100, 200)), back)
         deck.append(card)
         v += 1
 
@@ -99,27 +99,21 @@ def check_pairs(whole_hand):
     
     pair_len = len(pairs)
     if pair_len == 0:
-        print("Highcard")
         best_hand = [10]
         best_hand.append(whole_hand[:HAND_LENGTH - pair_len])
         return best_hand
-
     elif pair_len == 2:
-        print("one pair")
         best_hand = [9]
         for num in whole_hand[:HAND_LENGTH - pair_len]:
             pairs.append(num)
         best_hand.append(pairs)
         return best_hand
-
     elif pair_len == 3:
-        print("three of a kind")
         best_hand = [7]
         for num in whole_hand[:HAND_LENGTH - pair_len]:
             pairs.append(num)
         best_hand.append(pairs)
         return best_hand
-
     elif pair_len == 4:
         quad = True
         for card in pairs:
@@ -127,26 +121,30 @@ def check_pairs(whole_hand):
                 quad = False
                 break
         if quad == True:
-            print("four of a kind")
             best_hand = [3]
             for num in whole_hand[:HAND_LENGTH - pair_len]:
                 pairs.append(num)
             best_hand.append(pairs)
             return best_hand
         else:
-            print("2 pair")
             best_hand = [8]
             for num in whole_hand[:HAND_LENGTH - pair_len]:
                 pairs.append(num)
             best_hand.append(pairs)
             return best_hand
-
-
     elif pair_len == 5:
-        print("full house")
         best_hand = [4]
         best_hand.append(pairs)
         return best_hand
+    elif pair_len == 6:
+        best_hand = [7]
+        best_hand.append(pairs[:HAND_LENGTH])
+        return best_hand
+    elif pair_len == 7:
+        best_hand = [4]
+        best_hand.append(pairs[:HAND_LENGTH])
+        return best_hand      
+        
 
 
 # Checks if the hand has a flush
@@ -169,12 +167,11 @@ def check_flush(whole_hand):
     
     if len(hand_hearts) >= HAND_LENGTH or len(hand_diamonds) >= HAND_LENGTH or len(hand_spades) >= HAND_LENGTH or len(hand_clubs) >= HAND_LENGTH:
         has_flush = True
-        print("flush")
         best_hand = [5]
         best_hand.append(whole_hand[:HAND_LENGTH])
         return best_hand
     
-    return [0, []]
+    return [-1, []]
 
 def get_chances(x, y):
     ans = 0
@@ -186,9 +183,14 @@ def get_chances(x, y):
 
 # Check if hand has a straight
 def check_straight(whole_hand):
-    # STILL NEED TO CATCH ACE STRAIGHT 
+    # STILL NEED TO CATCH ACE STRAIGHT
+
+    straight_hand = []
+    for card in whole_hand:
+        if card.value not in straight_hand:
+            straight_hand.append(card)
     
-    chances = get_chances(HAND_LENGTH, len(whole_hand))
+    chances = get_chances(HAND_LENGTH, len(straight_hand))
 
     straight = False
     for i in range(chances):
@@ -196,12 +198,12 @@ def check_straight(whole_hand):
             straight_cards = []
             s = 1
             for j in range(i, i + HAND_LENGTH - 1):
-                if whole_hand[j].value == whole_hand[j + 1].value + 1:
+                if straight_hand[j].value == straight_hand[j + 1].value + 1:
                     i += 1
                     s += 1
-                    straight_cards.append(whole_hand[j])
+                    straight_cards.append(straight_hand[j])
                     if s == HAND_LENGTH:
-                        straight_cards.append(whole_hand[j + 1])
+                        straight_cards.append(straight_hand[j + 1])
                         straight = True
                         break
                 else:
@@ -212,28 +214,42 @@ def check_straight(whole_hand):
         flush_check = check_flush(whole_hand)
         if flush_check[0] == 5:
             if flush_check[1][0].value == 1:
-                print("royal flush")
                 return [1, straight_cards]
             else:
-                print("straight flush")
                 return [2, straight_cards]
         else:
-            print("straight")
             return [6, straight_cards]
     
-    return [0 ,[]]
+    return [-1 ,[]]
 
-# Checks how strong hand is | MAYBE SPLIT THIS UP PER HAND TO RETURN SOMETHING TO STORE IT
+# Checks how strong hand is and returns hand rating and strongest 5 cards
 def check_hand_strength(player_hand, dealer_cards):
     whole_player_hand = []
     whole_player_hand = sort_hand(whole_player_hand, player_hand, dealer_cards)
-
-    print("Hands")
-    # return rating of hand, with 5 the best cards if it has that rating
+    
     pair_strength = check_pairs(whole_player_hand)
     flush_strength = check_flush(whole_player_hand)
     straight_strength = check_straight(whole_player_hand)
+
+    if straight_strength[0] == 1 or straight_strength[0] == 2:
+        print(straight_strength[0])
+        return straight_strength
     
+    if pair_strength[0] == 3 or pair_strength[0] == 4:
+        print(pair_strength[0])
+        return pair_strength
+    
+    if flush_strength[0] == 5:
+        print(flush_strength[0])
+        return flush_strength
+    
+    if straight_strength[0] == 6:
+        print(straight_strength[0])
+        return straight_strength
+    
+    print(pair_strength[0])
+    return pair_strength
+        
 
 # Deals cards to a hand
 def deal_player(cards):
@@ -245,15 +261,54 @@ def deal_player(cards):
 # Deals the 4th card to the table
 def deal_turn(hero_hand, villian_hand, dealer_cards):
     turn = deal_card(dealer_cards, 1)
-    check_hand_strength(hero_hand, turn)
-    check_hand_strength(villian_hand, turn)
     return turn
 
 
 # Deaks the 5th card to the table
 def deal_river(hero_hand, villian_hand, dealer_cards):
     river = deal_card(dealer_cards, 1)
-    check_hand_strength(hero_hand, river)
-    check_hand_strength(villian_hand, river)
     return river
 
+def check_winner(hero_s, villian_s):
+    print(hero_s[0])
+    print(villian_s[0])
+    winner = -1
+    if hero_s[0] < villian_s[0]:
+        winner = Winner.Hero
+        return winner
+    elif hero_s[0] > villian_s[0]:
+        winner = Winner.Villian
+        return winner
+    elif hero_s[0] == villian_s[0]:
+        for i in range(HAND_LENGTH):
+            if hero_s[1][i].value > villian_s[1][i].value:
+                winner = Winner.Hero
+                return winner
+            elif hero_s[1][i].value < villian_s[1][i].value:
+                winner = Winner.Villian
+                return winner
+            else:
+                continue
+        winner = Winner.Tie
+        return winner
+
+def cacluate_outs(player, opponent, dealer_cards):
+    rule = 0
+    if len(dealer_cards) == 3:
+        rule = 4
+    elif len(dealer_cards) == 4:
+        rule = 2
+
+    winner = check_winner(player, opponent)
+    if winner == Winner.Hero:
+        #check other one
+        pass
+    elif winner == Winner.Villian:
+        # check other one
+        pass
+    else:
+        print("tied")
+
+    
+    
+   
