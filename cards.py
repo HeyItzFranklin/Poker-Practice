@@ -27,7 +27,8 @@ class Card():
         self.x_pos = 0
         self.y_pos = 0
 
-
+CARD_WIDTH = 100
+CARD_HEIGHT = 200
 SUIT_NAMES = ["_of_spades", "_of_hearts", "_of_diamonds", "_of_clubs"]
 NUM_OF_SUITS = len(SUIT_NAMES)
 CARD_NAMES = ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king"]
@@ -42,7 +43,7 @@ for i in range(NUM_OF_SUITS):
     for card in CARD_NAMES:
         card += SUIT_NAMES[i]
         image = card + ".png"
-        card = Card(card, v, Suit(i), pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card-Images", image)), (100, 200)), back)
+        card = Card(card, v, Suit(i), pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card-Images", image)), (CARD_WIDTH, CARD_HEIGHT)), back)
         deck.append(card)
         v += 1
 
@@ -137,8 +138,25 @@ def check_pairs(whole_hand):
         best_hand.append(pairs)
         return best_hand
     elif pair_len == 6:
+        # use count for cards with the same value?
+        #if three of the cards are same then 
+            # if 4 the cards match
+                # best_hand = [3]
+                # remove last 2 of cards
+                # add in highest card
+                # return best hand
+            # else
+                # best_hand = [7]
+                # best_hand.append(pairs[:HAND_LENGTH])
+        # else
+        # best_hand = [8]
+        # remove last card
+        # add in highest card
+        # return best_hand
+        
         best_hand = [7]
         best_hand.append(pairs[:HAND_LENGTH])
+
         return best_hand
     elif pair_len == 7:
         best_hand = [4]
@@ -150,6 +168,7 @@ def check_pairs(whole_hand):
 # Checks if the hand has a flush
 def check_flush(whole_hand):
     # Check Flush
+    flush_out = HAND_LENGTH - 1
     has_flush = False
     hand_hearts = []
     hand_diamonds = []
@@ -170,6 +189,10 @@ def check_flush(whole_hand):
         best_hand = [5]
         best_hand.append(whole_hand[:HAND_LENGTH])
         return best_hand
+    
+    if len(hand_hearts) == flush_out  or len(hand_diamonds) >= flush_out or len(hand_spades) >= flush_out or len(hand_clubs) >= flush_out:
+        print("vv flush out vv")
+    
     
     return [-1, []]
 
@@ -219,6 +242,9 @@ def check_straight(whole_hand):
                 return [2, straight_cards]
         else:
             return [6, straight_cards]
+                
+
+
     
     return [-1 ,[]]
 
@@ -292,23 +318,28 @@ def check_winner(hero_s, villian_s):
         winner = Winner.Tie
         return winner
 
-def cacluate_outs(player, opponent, dealer_cards):
+def cacluate_outs(player_s, opponent_s, dealer_cards):
     rule = 0
     if len(dealer_cards) == 3:
         rule = 4
     elif len(dealer_cards) == 4:
         rule = 2
 
-    winner = check_winner(player, opponent)
-    if winner == Winner.Hero:
-        #check other one
-        pass
-    elif winner == Winner.Villian:
-        # check other one
-        pass
-    else:
-        print("tied")
 
+    winner = check_winner(player_s, opponent_s)
+  
+        
+def reset_deck(hero_cards, villian_cards, dealer_cards):
+    for card in hero_cards:
+        deck.append(card)
+    
+    for card in villian_cards:
+        deck.append(card)
+    
+    for card in dealer_cards:
+        deck.append(card)
     
     
+
+
    
