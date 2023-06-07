@@ -98,7 +98,6 @@ def fill_pairs_hand(pairs, whole_hand):
 
 # Checks if the hand has a pair, 2 pair, 3 of a kind, or 4 pair.
 def check_pairs(whole_hand):
-    # Check for pairs
     pairs = []
     for i in range(len(whole_hand) - 1):
         for j in range(i + 1, len(whole_hand)):
@@ -212,7 +211,6 @@ def check_pairs(whole_hand):
 
 # Checks if the hand has a flush
 def check_flush(whole_hand):
-    # flush_out = HAND_LENGTH - 1
     has_flush = False
     hand_hearts = []
     hand_diamonds = []
@@ -233,9 +231,6 @@ def check_flush(whole_hand):
         best_hand = [5]
         best_hand.append(whole_hand[:HAND_LENGTH])
         return best_hand
-    
-    #if len(hand_hearts) == flush_out  or len(hand_diamonds) >= flush_out or len(hand_spades) >= flush_out or len(hand_clubs) >= flush_out:
-        #print("vv flush out vv")
     
     return [-1, []]
 
@@ -395,8 +390,3 @@ def reset_deck(hero_cards, villian_cards, dealer_cards):
     
     for card in dealer_cards:
         deck.append(card)
-    
-    
-
-
-   
