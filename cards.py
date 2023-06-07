@@ -11,6 +11,7 @@ class Suit(Enum):
     Diamond = 2
     Club = 3
 
+
 class Winner(Enum):
     Hero = 0
     Villian = 1
@@ -27,11 +28,12 @@ class Card():
         self.x_pos = 0
         self.y_pos = 0
 
+
 CARD_WIDTH = 100
 CARD_HEIGHT = 200
 SUIT_NAMES = ["_of_spades", "_of_hearts", "_of_diamonds", "_of_clubs"]
 NUM_OF_SUITS = len(SUIT_NAMES)
-CARD_NAMES = ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king"]
+CARD_NAMES = ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king", "ace"]
 CARDS_PER_SUIT = len(CARD_NAMES)
 HAND_LENGTH = 5
 back = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card_back.png")), (120, 220))
@@ -39,7 +41,7 @@ back = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "Card_bac
 # Addes the name of the card, the v(alue) of the card and the suit of the card to the deck
 deck = []
 for i in range(NUM_OF_SUITS):
-    v = 1
+    v = 2
     for card in CARD_NAMES:
         card += SUIT_NAMES[i]
         image = card + ".png"
@@ -85,6 +87,14 @@ def sort_hand(whole_hand, original_hand, dealer_cards):
     whole_hand = sorted(whole_hand, key=lambda card: card.value, reverse= True)
     return whole_hand
 
+# Creates a hand with pairs and the next best cards until the hand is full
+def fill_pairs_hand(pairs, whole_hand):
+    i = 0
+    while len(pairs) < HAND_LENGTH:
+        if whole_hand[i] not in pairs:
+            pairs.append(whole_hand[i])
+        i += 1
+
 
 # Checks if the hand has a pair, 2 pair, 3 of a kind, or 4 pair.
 def check_pairs(whole_hand):
@@ -105,14 +115,12 @@ def check_pairs(whole_hand):
         return best_hand
     elif pair_len == 2:
         best_hand = [9]
-        for num in whole_hand[:HAND_LENGTH - pair_len]:
-            pairs.append(num)
+        fill_pairs_hand(pairs, whole_hand)
         best_hand.append(pairs)
         return best_hand
     elif pair_len == 3:
         best_hand = [7]
-        for num in whole_hand[:HAND_LENGTH - pair_len]:
-            pairs.append(num)
+        fill_pairs_hand(pairs, whole_hand)
         best_hand.append(pairs)
         return best_hand
     elif pair_len == 4:
@@ -123,14 +131,12 @@ def check_pairs(whole_hand):
                 break
         if quad == True:
             best_hand = [3]
-            for num in whole_hand[:HAND_LENGTH - pair_len]:
-                pairs.append(num)
+            fill_pairs_hand(pairs, whole_hand)
             best_hand.append(pairs)
             return best_hand
         else:
             best_hand = [8]
-            for num in whole_hand[:HAND_LENGTH - pair_len]:
-                pairs.append(num)
+            fill_pairs_hand(pairs, whole_hand)
             best_hand.append(pairs)
             return best_hand
     elif pair_len == 5:
@@ -138,37 +144,75 @@ def check_pairs(whole_hand):
         best_hand.append(pairs)
         return best_hand
     elif pair_len == 6:
-        # use count for cards with the same value?
-        #if three of the cards are same then 
-            # if 4 the cards match
-                # best_hand = [3]
-                # remove last 2 of cards
-                # add in highest card
-                # return best hand
-            # else
-                # best_hand = [7]
-                # best_hand.append(pairs[:HAND_LENGTH])
-        # else
-        # best_hand = [8]
-        # remove last card
-        # add in highest card
-        # return best_hand
-        
-        best_hand = [7]
-        best_hand.append(pairs[:HAND_LENGTH])
+        unique_pairs = {}
+        for card in pairs:
+            if card.value not in unique_pairs:
+                unique_pairs[card.value] = 1
+            else:
+                unique_pairs[card.value] += 1
 
-        return best_hand
-    elif pair_len == 7:
-        best_hand = [4]
-        best_hand.append(pairs[:HAND_LENGTH])
-        return best_hand      
+            if len(unique_pairs) == 3:
+                best_hand = [8]
+                for i in range (2):
+                    pairs.pop()
+                fill_pairs_hand(pairs, whole_hand)
+                best_hand.append(pairs)
+                return best_hand
+            else:
+                for key in unique_pairs:
+                    if unique_pairs[key] == 4:
+                        if pairs[0] == pairs[3]:
+                            for i in range(2):
+                                pairs.pop()
+                            best_hand = [3]
+                            fill_pairs_hand(pairs, whole_hand)
+                            best_hand.append(pairs)
+                            return best_hand
+                        else:
+                            for i in range(2):
+                                pairs.pop(0)
+                            best_hand = [3]
+                            fill_pairs_hand(pairs, whole_hand)
+                            best_hand.append(pairs)
+                            return best_hand
         
+                best_hand = [4]
+                best_hand.append(pairs[:HAND_LENGTH])
+                return best_hand
+            
+    elif pair_len == 7:
+        unique_pairs = {}
+        for card in pairs:
+            if card.value not in unique_pairs:
+                unique_pairs[card.value] = 1
+            else:
+                unique_pairs[card.value] += 1
+        
+        if len(unique_pairs) == 3:
+            if pairs[0] == pairs[2] or pairs[2] == pairs[4]:
+                for i in range(2):
+                    pairs.pop()
+            else:
+                for i in range(2):
+                    pairs.pop(2)
+
+            best_hand = [4]
+            fill_pairs_hand(pairs, whole_hand)
+            best_hand.append(pairs)
+            return best_hand
+        else:
+            if pairs[0] == [pairs[3]]:
+                for i in range(3):
+                    pairs.pop()
+                best_hand = [3]
+                fill_pairs_hand(pairs, whole_hand)
+                best_hand.append(pairs)
+                return best_hand
 
 
 # Checks if the hand has a flush
 def check_flush(whole_hand):
-    # Check Flush
-    flush_out = HAND_LENGTH - 1
+    # flush_out = HAND_LENGTH - 1
     has_flush = False
     hand_hearts = []
     hand_diamonds = []
@@ -190,12 +234,12 @@ def check_flush(whole_hand):
         best_hand.append(whole_hand[:HAND_LENGTH])
         return best_hand
     
-    if len(hand_hearts) == flush_out  or len(hand_diamonds) >= flush_out or len(hand_spades) >= flush_out or len(hand_clubs) >= flush_out:
-        print("vv flush out vv")
-    
+    #if len(hand_hearts) == flush_out  or len(hand_diamonds) >= flush_out or len(hand_spades) >= flush_out or len(hand_clubs) >= flush_out:
+        #print("vv flush out vv")
     
     return [-1, []]
 
+# Calculates how many times you can check 5 consectutive cards in the hand
 def get_chances(x, y):
     ans = 0
     for i in range(y):
@@ -204,18 +248,31 @@ def get_chances(x, y):
         else:
             return ans
 
+
 # Check if hand has a straight
 def check_straight(whole_hand):
-    # STILL NEED TO CATCH ACE STRAIGHT
-
     straight_hand = []
     for card in whole_hand:
         if card.value not in straight_hand:
             straight_hand.append(card)
     
     chances = get_chances(HAND_LENGTH, len(straight_hand))
-
     straight = False
+
+    low_straight_values = [5, 4, 3, 2, 14]
+    low_straight = 0
+    low_straight_cards = []
+    for i in range(HAND_LENGTH):
+        for card in straight_hand:
+            if card.value == low_straight_values[i]:
+                low_straight_cards.append(card)
+                low_straight += 1
+                break
+    
+    if low_straight == 5:
+        return [6, low_straight_cards]
+
+
     for i in range(chances):
         if straight == False:
             straight_cards = []
@@ -241,12 +298,11 @@ def check_straight(whole_hand):
             else:
                 return [2, straight_cards]
         else:
-            return [6, straight_cards]
-                
-
-
+            return [6, straight_cards]      
     
+
     return [-1 ,[]]
+
 
 # Checks how strong hand is and returns hand rating and strongest 5 cards
 def check_hand_strength(player_hand, dealer_cards):
@@ -295,6 +351,7 @@ def deal_river(hero_hand, villian_hand, dealer_cards):
     river = deal_card(dealer_cards, 1)
     return river
 
+# Checks which hand is stronger
 def check_winner(hero_s, villian_s):
     print(hero_s[0])
     print(villian_s[0])
@@ -318,6 +375,7 @@ def check_winner(hero_s, villian_s):
         winner = Winner.Tie
         return winner
 
+
 def cacluate_outs(player_s, opponent_s, dealer_cards):
     rule = 0
     if len(dealer_cards) == 3:
@@ -325,10 +383,9 @@ def cacluate_outs(player_s, opponent_s, dealer_cards):
     elif len(dealer_cards) == 4:
         rule = 2
 
-
     winner = check_winner(player_s, opponent_s)
   
-        
+# Adds all the cards back into the deck
 def reset_deck(hero_cards, villian_cards, dealer_cards):
     for card in hero_cards:
         deck.append(card)

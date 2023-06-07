@@ -37,6 +37,7 @@ def TitleScreen():
 
         pygame.display.flip()
 
+
 def display_hand(x , y, hand, text, color):
     hero_text = PLAYER_FONT.render(text, 1, color)
     SCREEN.blit(hero_text, (x,  y + cards.CARD_HEIGHT))
@@ -46,9 +47,11 @@ def display_hand(x , y, hand, text, color):
         card.y = y
         x += cards.CARD_WIDTH
 
+
 def hide_hand(hand):
     for card in hand:
         SCREEN.blit(card.back, (card.x - 10, card.y - 10))
+
 
 def display_cards(hero, villian, dealer_cards):
     display_hand(300, 430, hero, "Hero Cards", GOLD)
@@ -80,6 +83,7 @@ def display_winner(winner, hero, villian):
         hide_hand(villian)
         hero_outcome = "CHOP POT"
         villian_outcome = "CHOP POT"
+
 
     
     hero_outcome = OUTCOME_FONT.render(hero_outcome, 1, WHITE)
@@ -135,12 +139,19 @@ def Play():
                 elif press == 3:
                     winner = cards.check_winner(hero_s, villain_s)
                     press += 1
-                elif press >= 4:
+                elif press == 4:
+                    if winner == cards.Winner.Hero:
+                        villian_up = False
+                    elif winner == cards.Winner.Villian:
+                        hero_up = False
+                    else:
+                        villian_up = False
+                        hero_up = False
+                        
                     display_winner(winner, hero, villian)
                     press += 1
                 
 
-            
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     cards.reset_deck(hero, villian, current_board)
